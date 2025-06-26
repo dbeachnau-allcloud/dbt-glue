@@ -1027,8 +1027,8 @@ SqlWrapper2.execute("""SELECT * FROM {target_relation.schema}.{target_relation.n
             lf = boto3.client("lakeformation", region_name=client.credentials.region)
             sts = boto3.client("sts")
             identity = sts.get_caller_identity()
-            account = identity.get("Account")
-            manager = LfTagsManager(lf, account, relation, config)
+            catalog_id = client.credentials.catalog_id or identity.get("Account")
+            manager = LfTagsManager(lf, catalog_id, relation, config)
             manager.process_lf_tags()
             return
         logger.debug(f"Lakeformation is disabled for {relation}")

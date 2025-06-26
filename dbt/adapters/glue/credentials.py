@@ -39,6 +39,7 @@ class GlueCredentials(Credentials):
     use_arrow: Optional[bool] = False
     custom_iceberg_catalog_namespace: Optional[str] = "glue_catalog"
     enable_spark_seed_casting: Optional[bool] = False
+    catalog_id: Optional[str] = None
 
     @property
     def type(self):
