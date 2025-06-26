@@ -39,7 +39,7 @@ class LfTagsManager:
                 self._remove_lf_tags_database(db_resource, existing_lf_tags_database)
             self._apply_lf_tags_database(db_resource)
         table_resource = {
-            "Table": {"DatabaseName": self.database, "Name": self.table}}
+            "Table": {"CatalogId": self.catalog_id, "DatabaseName": self.database, "Name": self.table}}
         existing_lf_tags = self.lf_client.get_resource_lf_tags(
             Resource=table_resource)
         if self.drop_existing:
