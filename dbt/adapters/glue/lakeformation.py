@@ -127,7 +127,8 @@ class LfTagsManager:
 
         if self.lf_tags_table:
             attempts = 0
-            while attempts < 3:
+            MAX_ATTEMPTS = 5
+            while True:
                 try:
                     response = self.lf_client.add_lf_tags_to_resource(
                         Resource=table_resource, LFTags=[
@@ -137,6 +138,8 @@ class LfTagsManager:
                 except ClientError as e:
                     if e.response['Error']['Code'] == 'ConcurrentModificationException':
                         attempts += 1
+                        if attempts > MAX_ATTEMPTS:
+                            raise e
                         sleep(5)
                     else:
                         raise e
