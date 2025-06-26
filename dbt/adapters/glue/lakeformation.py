@@ -2,9 +2,12 @@
 
 from typing import Dict, List, Optional, Union
 
+from botocore.exceptions import ClientError
+
 from dbt.adapters.glue.relation import SparkRelation
 from dbt.adapters.events.logging import AdapterLogger
 from dbt_common.exceptions import DbtRuntimeError
+from time import sleep
 
 logger = AdapterLogger("Glue")
 
@@ -123,12 +126,20 @@ class LfTagsManager:
                     response, None, to_remove, "remove"))
 
         if self.lf_tags_table:
-            self.lf_client
-            response = self.lf_client.add_lf_tags_to_resource(
-                Resource=table_resource, LFTags=[
-                    {"TagKey": k, "TagValues": [v]} for k, v in self.lf_tags_table.items()]
-            )
-            logger.debug(self._parse_lf_response(response, None, self.lf_tags_table))
+            attempts = 0
+            while attempts < 3:
+                try:
+                    response = self.lf_client.add_lf_tags_to_resource(
+                        Resource=table_resource, LFTags=[
+                            {"TagKey": k, "TagValues": [v]} for k, v in self.lf_tags_table.items()]
+                    )
+                    logger.debug(self._parse_lf_response(response, None, self.lf_tags_table))
+                except ClientError as e:
+                    if e.response['Error']['Code'] == 'ConcurrentModificationException':
+                        attempts += 1
+                        sleep(5)
+                    else:
+                        raise e
 
     def _apply_lf_tags_columns(self) -> None:
         if self.lf_tags_columns:
