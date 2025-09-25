@@ -216,6 +216,8 @@ class GlueAdapter(SQLAdapter):
             logger.error("rename_relation exception")
 
     def get_relation(self, database, schema, identifier, file_format=None):
+        file_format = file_format or 's3tables'
+
         session, client = self.get_connection()
         if not identifier:
             logger.debug(f"get_relation returns None for schema : {schema} as identifier is not set")
@@ -236,7 +238,7 @@ class GlueAdapter(SQLAdapter):
                     # Create relation for S3 Tables
                     computed_schema = self.__compute_schema_based_on_type(schema=schema_stripped, identifier=identifier)
                     return self.Relation.create(
-                        database=computed_schema,
+                        database=database,
                         schema=computed_schema,
                         identifier=identifier,
                         type='table'
@@ -895,9 +897,11 @@ SqlWrapper2.execute("""select 1""")
                         DatabaseName=schema,
                         Name=relation.name
                     )
-                    return 's3_table'
+                    return BaseRelation.Table
                 except Exception as e:
-                    return 's3_table'  # Assume it's S3 table even if get_table fails
+                    # incremental materialization needs use to return None here in order
+                    # to work properly
+                    return None
 
         schema = self._strip_catalog_from_schema(relation.schema)
 
